@@ -108,7 +108,7 @@ revert_emby() {
 ################## 卸载emby ##################
 del_emby() {
   systemctl stop emby-server #结束 emby 进程
-  dpkg -r --purge emby-server
+  sudo apt-get remove emby-server
 }
 
 ################## 主菜单 ##################
