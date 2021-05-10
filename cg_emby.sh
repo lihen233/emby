@@ -50,10 +50,9 @@ check_emby() {
       rm -f emby-server-deb_"${emby_version}"_amd64.deb
     fi
     #安装常用插件
-    echo -e "${curr_date} ${green}[INFO]${normal} 安装emby常用插件（Subscene射手字幕/JAV_scraper/Auto Organize/douban/Reports）."
+    echo -e "${curr_date} ${green}[INFO]${normal} 安装emby常用插件（kodi）."
     #wget -N -O kernel-
-    #chown 998.998 /var/lib/emby/plugins/Emby.Subtitle.Subscene.dll  修改用户和用户组
-    #chown 998.998 /var/lib/emby/plugins/JavScraper.dll
+    #chown 998.998 /var/lib/emby/plugins/Emby.Kodi.SyncQueue.dll  修改用户和用户组
     #
     #修改emby服务,fail自动重启
     if grep -q "Restart=always" /usr/lib/systemd/system/emby-server.service; then
