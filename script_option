@@ -1,0 +1,396 @@
+#!/bin/bash
+#=============================================================
+# https://github.com/cgkings/script-store
+# bash <(curl -sL git.io/cg_script_option)
+# File Name:
+# Author: cgkings
+# Created Time : 2020.12.25
+# Description:
+# System Required: Debian/Ubuntu
+# Version: 1.0
+#=============================================================
+
+curr_date=$(date "+%Y-%m-%d %H:%M:%S")
+
+# Predefined env
+#export DEBIAN_FRONTEND=noninteractive
+#export COMPOSER_ALLOW_SUPERUSER=1
+
+################## 字体格式设置 ##################
+setcolor() {
+  black=$(tput setaf 0)
+  red=$(tput setaf 1)
+  # shellcheck disable=SC2034
+  green=$(tput setaf 2)
+  # shellcheck disable=SC2034
+  yellow=$(tput setaf 3)
+  bold=$(tput bold)
+  # shellcheck disable=SC2034
+  jiacu=${normal}${bold}
+  # shellcheck disable=SC2034
+  blue=$(tput setaf 4)
+  # shellcheck disable=SC2034
+  magenta=$(tput setaf 5)
+  # shellcheck disable=SC2034
+  cyan=$(tput setaf 6)
+  white=$(tput setaf 7)
+  normal=$(tput sgr0)
+  # shellcheck disable=SC2034
+  on_black=$(tput setab 0)
+  on_red=$(tput setab 1)
+  on_green=$(tput setab 2)
+  on_yellow=$(tput setab 3)
+  on_blue=$(tput setab 4)
+  on_magenta=$(tput setab 5)
+  on_cyan=$(tput setab 6)
+  on_white=$(tput setab 7)
+  # shellcheck disable=SC2034
+  shanshuo=$(tput blink)
+  # shellcheck disable=SC2034
+  wuguangbiao=$(tput civis)
+  # shellcheck disable=SC2034
+  guangbiao=$(tput cnorm)
+  # shellcheck disable=SC2034
+  underline=$(tput smul)
+  # shellcheck disable=SC2034
+  reset_underline=$(tput rmul)
+  # shellcheck disable=SC2034
+  dim=$(tput dim)
+  standout=$(tput smso)
+  # shellcheck disable=SC2034
+  reset_standout=$(tput rmso)
+  # shellcheck disable=SC2034
+  title=${standout}
+  # shellcheck disable=SC2034
+  baihuangse=${white}${on_yellow}
+  # shellcheck disable=SC2034
+  bailanse=${white}${on_blue}
+  # shellcheck disable=SC2034
+  bailvse=${white}${on_green}
+  # shellcheck disable=SC2034
+  baiqingse=${white}${on_cyan}
+  # shellcheck disable=SC2034
+  baihongse=${white}${on_red}
+  # shellcheck disable=SC2034
+  baizise=${white}${on_magenta}
+  # shellcheck disable=SC2034
+  heibaise=${black}${on_white}
+  # shellcheck disable=SC2034
+  heihuangse=${on_yellow}${black}
+}
+
+################## 检查系统要求 ##################
+check_sys() {
+  if [[ $(id -u) != 0 ]]; then
+    whiptail --title "user not supported(用户权限不支持)" --msgbox "请使用root或者sudo用户运行,Please run this script as root or sudoer." 8 68
+    echo -e "${red}Error:请使用root或者sudo用户运行,Please run this script as root or sudoer!${normal}"
+    exit 1
+  fi
+  if [[ $(uname -m 2> /dev/null) != x86_64 ]]; then
+    whiptail --title "hardware not supported(硬件不支持)" --msgbox "本脚本仅适用于x86_64机器,Please run this script on x86_64 machine." 8 68
+    echo -e "${red}Error:本脚本仅适用于x86_64机器,Please run this script on x86_64 machine!${normal}"
+    exit 1
+  fi
+  if [[ -d "/proc/vz" ]]; then
+    whiptail --title "Virtualization technology not supported(虚拟化架构不支持)" --msgbox "本脚本暂时不支持openVZ架构,Please run this script on KVM." 8 68
+    echo -e "${red}Error:本脚本暂时不支持openVZ架构!${normal}"
+    exit 1
+  fi
+  if [[ $(free -m | grep Mem | awk '{print $2}' 2> /dev/null) -le "100" ]]; then
+    whiptail --title "RAM not enough(内存不足)" --msgbox "本脚本需要至少100MB内存才能正常运作,Please run this script on machine with more than 100MB total ram." 8 68
+    echo -e "${red}Error:本脚本需要至少100MB内存才能正常运作,Please run this script on machine with more than 100MB total ram!${normal}"
+    exit 1
+  fi
+  #if [[ $(df $PWD | awk '/[0-9]%/{print $(NF-2)}' 2> /dev/null) -le "3000000" ]]; then
+  #  whiptail --title "free disk space not enough(硬盘可用空间不足)" --msgbox "本脚本需要至少3GB硬盘可用空间才能正常运作,Please run this script on machine with more than 3G free disk space." 8 68
+  #  echo -e "${red}Error:本脚本需要至少3GB硬盘可用空间才能正常运作,Please run this script on machine with more than 3G free disk space!${normal}"
+  #  exit 1
+  #fi
+  #Disable cloud-init
+  rm -rf /lib/systemd/system/cloud*
+  ## 卸载腾讯云云盾
+  if [[ -d /usr/local/qcloud ]]; then
+    #disable tencent cloud process
+    rm -rf /usr/local/sa
+    rm -rf /usr/local/agenttools
+    rm -rf /usr/local/qcloud
+    #disable huawei cloud process
+    rm -rf /usr/local/telescope
+  fi
+  ## 卸载阿里云云盾
+  if [[ -d /usr/local/aegis ]]; then
+    TERM=ansi whiptail --title "阿里云监控卸载" --infobox "检测到阿里云恶意监控服务，开始卸载..." 7 68
+    echo -e "${curr_date} ${red}[INFO]${normal} Uninstall Aliyun aegis ing"
+    iptables -I INPUT -s 140.205.201.0/28 -j DROP &> /dev/null
+    iptables -I INPUT -s 140.205.201.16/29 -j DROP &> /dev/null
+    iptables -I INPUT -s 140.205.201.32/28 -j DROP &> /dev/null
+    iptables -I INPUT -s 140.205.225.192/29 -j DROP &> /dev/null
+    iptables -I INPUT -s 140.205.225.200/30 -j DROP &> /dev/null
+    iptables -I INPUT -s 140.205.225.184/29 -j DROP &> /dev/null
+    iptables -I INPUT -s 140.205.225.183/32 -j DROP &> /dev/null
+    iptables -I INPUT -s 140.205.225.206/32 -j DROP &> /dev/null
+    iptables -I INPUT -s 140.205.225.205/32 -j DROP &> /dev/null
+    iptables -I INPUT -s 140.205.225.195/32 -j DROP &> /dev/null
+    iptables -I INPUT -s 140.205.225.204/32 -j DROP &> /dev/null
+    systemctl stop aegis
+    systemctl stop CmsGoAgent.service
+    systemctl stop aliyun
+    systemctl stop cloud-config
+    systemctl stop cloud-final
+    systemctl stop cloud-init-local.service
+    systemctl stop cloud-init
+    systemctl stop ecs_mq
+    systemctl stop exim4
+    systemctl stop apparmor
+    systemctl stop sysstat
+    systemctl disable aegis
+    systemctl disable CmsGoAgent.service
+    systemctl disable aliyun
+    systemctl disable cloud-config
+    systemctl disable cloud-final
+    systemctl disable cloud-init-local.service
+    systemctl disable cloud-init
+    systemctl disable ecs_mq
+    systemctl disable exim4
+    systemctl disable apparmor
+    systemctl disable sysstat
+    killall -9 aegis_cli > /dev/null 2>&1
+    killall -9 aegis_update > /dev/null 2>&1
+    killall -9 aegis_cli > /dev/null 2>&1
+    killall -9 AliYunDun > /dev/null 2>&1
+    killall -9 AliHids > /dev/null 2>&1
+    killall -9 AliHips > /dev/null 2>&1
+    killall -9 AliYunDunUpdate > /dev/null 2>&1
+    rm -rf /etc/init.d/aegis
+    rm -rf /etc/systemd/system/CmsGoAgent*
+    rm -rf /etc/systemd/system/aliyun*
+    rm -rf /lib/systemd/system/cloud*
+    rm -rf /lib/systemd/system/ecs_mq*
+    rm -rf /usr/local/aegis
+    rm -rf /usr/local/cloudmonitor
+    rm -rf /usr/sbin/aliyun*
+    rm -rf /sbin/ecs_mq_rps_rfs
+    for ((var = 2; var <= 5; var++)); do
+      if [ -d "/etc/rc${var}.d/" ]; then
+        rm -rf "/etc/rc${var}.d/S80aegis"
+      elif [ -d "/etc/rc.d/rc${var}.d" ]; then
+        rm -rf "/etc/rc.d/rc${var}.d/S80aegis"
+      fi
+    done
+    apt-get purge sysstat exim4 chrony aliyun-assist -y
+    systemctl daemon-reload
+    echo "nameserver 1.1.1.1" > '/etc/resolv.conf'
+  fi
+}
+
+################## 检查rclone&fclone安装情况 ##################
+check_rclone() {
+  #检查rclone安装状态，没装就安装
+  if [ -z "$(command -v rclone)" ]; then
+    echo -e "${curr_date} ${red}rclone${normal} 不存在.正在为您安装，请稍后..."
+    bash <(curl -sL https://rclone.org/install.sh) > /dev/null
+    echo -e "${curr_date} [INFO] rclone已安装" >> /root/install_log.txt
+  fi
+  #检查rclone的conf文件是否存在，不存在就要求你退出脚本自行配置
+  if [ ! -f /root/.config/rclone/rclone.conf ]; then
+    if grep -q "未检测到rclone配置文件" /root/install_log.txt; then
+      echo > /dev/null
+    else
+      echo -e "${curr_date} [警告] 未检测到rclone配置文件.即rclone无remote,将影响rclone/fclone的使用" >> /root/install_log.txt
+    fi
+  else
+    if grep -q "已检测到rclone配置文件" /root/install_log.txt; then
+      echo > /dev/null
+    else
+      echo -e "${curr_date} [INFO] 已检测到rclone配置文件，rclone/fclone可以使用了." >> /root/install_log.txt
+    fi
+  fi
+  ###file-max设置，解决too many open files问题###
+  if grep -q "65535" /etc/security/limits.conf; then
+    echo > /dev/null
+  else
+    echo -e "\nfs.file-max = 6553500" >> /etc/sysctl.conf
+    sysctl -p
+    cat >> /etc/security/limits.conf << EOF
+
+* soft memlock unlimited
+* hard memlock unlimited
+* soft nofile 65535
+* hard nofile 65535
+* soft nproc 65535
+* hard nproc 65535
+
+root soft memlock unlimited
+root hard memlock unlimited
+root soft nofile 65535
+root hard nofile 65535
+root soft nproc 65535
+root hard nproc 65535
+EOF
+    echo -e "\nsession required pam_limits.so" >> /etc/pam.d/common-session
+    echo -e "${curr_date} [INFO] file_max 修改成功" >> /root/install_log.txt
+  fi
+}
+
+################## 检查安装情况 ##################
+check_release() {
+  if [[ -f /etc/redhat-release ]]; then
+    release='centos'
+  elif grep -q -E -i "debian" /etc/issue; then
+    release='debian'
+  elif grep -q -E -i "armbian" /etc/issue; then
+    release='armdebian'
+  elif grep -q -E -i "ubuntu" /etc/issue; then
+    release='ubuntu'
+  elif cat  | grep -q -E -i "redhat|red hat|centos" /etc/issue; then
+    release='centos'
+  else
+    echo -e "${red}[ERROR]${normal} 您的系统太奇葩，本脚本不支持"
+    exit
+  fi
+}
+
+check_command() {
+  check_release
+  for command_arges in $*; do
+    command_status=$(dpkg --get-selections | grep "$command_arges")
+    if [ -z "$command_status" ]; then
+      echo -e "${curr_date} ${red}$command_arges${normal} 不存在.正在为您安装，请稍后..."
+      if [[ "${release}" = "centos" ]]; then
+        yum install "$command_arges" -y > /dev/null
+        echo -e "${curr_date} [INFO] $command_arges 已完成安装动作，可使用< dpkg --get-selections | grep $command_arges >命令验证安装结果" >> /root/install_log.txt
+      elif [[ "${release}" = "debian" || "${release}" = "ubuntu" || "${release}" = "armdebian" ]]; then
+        apt-get install "$command_arges" -y --upgrade > /dev/null
+        echo -e "${curr_date} [INFO] $command_arges 已完成安装动作，可使用< dpkg --get-selections | grep $command_arges >命令验证安装结果" >> /root/install_log.txt
+      else
+        echo -e "${curr_date} ${red}对不起！您的系统暂不支持该脚本，请联系作者做定制优化，谢谢！${normal}"
+        exit 1
+      fi
+    fi
+  done
+}
+
+################## 检查目录情况 ##################
+check_dir_file() {
+  if [ "${1:0-1:1}" = "/" ] && [ -d "$1" ]; then
+    return 0
+  elif [ -f "$1" ]; then
+    return 0
+  fi
+  return 1
+}
+
+################## 选择remote ##################[done]
+remote_choose() {
+  #选择remote
+  rclone listremotes | grep -Eo "[0-9A-Za-z-]+" | awk '{ print FNR " " $0}' > ~/.config/rclone/remote_list.txt
+  remote_list=($(cat ~/.config/rclone/remote_list.txt))
+  remote_choose_num=$(whiptail --clear --ok-button "上下键选择,回车键确定" --backtitle "Hi,欢迎使用cg_mount。有关脚本问题，请访问: https://github.com/cgkings/script-store 或者 https://t.me/cgking_s (TG 王大锤)。" --title "remote选择" --menu --nocancel "注：上下键回车选择,ESC退出脚本！" 18 62 10 "${remote_list[@]}" 3>&1 1>&2 2>&3)
+  if [ -z "$remote_choose_num" ]; then
+    rm -f ~/.config/rclone/remote_list.txt
+    myexit 0
+  else
+    my_remote=$(awk '{print $2}' /root/.config/rclone/remote_list.txt | sed -n "$remote_choose_num"p)
+    rm -f ~/.config/rclone/remote_list.txt
+  fi
+}
+
+################## 选择team drive ##################[done]
+td_id_choose() {
+  #生成td_id列表
+  fclone backend lsdrives "$my_remote": -o separator=';' > ~/.config/rclone/td_list.txt
+  #格式化td列表
+  sed -i 's/ //g;s/\;/    /g' ~/.config/rclone/td_list.txt
+  td_list=($(cat ~/.config/rclone/td_list.txt))
+  td_id=$(whiptail --clear --ok-button "选择完毕,进入下一步" --backtitle "Hi,欢迎使用。有关脚本问题，请访问: https://github.com/cgkings/script-store 或者 https://t.me/cgking_s (TG 王大锤)。" --title "Team driver选择" --menu --nocancel "注：上下键回车选择,ESC退出脚本！" 18 62 10 \
+    "customize" "我要自定义ID" \
+    "${td_list[@]}" 3>&1 1>&2 2>&3)
+  if [ -z "$td_id" ]; then
+    rm -f ~/.config/rclone/td_list.txt
+    myexit 0
+  elif [[ "$td_id" == "customize" ]]; then
+    td_id=$(whiptail --inputbox --backtitle "Hi,欢迎使用。有关脚本问题，请访问: https://github.com/cgkings/script-store 或者 https://t.me/cgking_s (TG 王大锤)。" --title "自定义挂载ID输入" --nocancel "注：ESC退出" 10 68 3>&1 1>&2 2>&3)
+    if [ -z "$td_id" ]; then
+      rm -f ~/.config/rclone/td_list.txt
+      myexit 0
+    else
+      rm -f ~/.config/rclone/td_list.txt
+    fi
+  else
+    rm -f ~/.config/rclone/td_list.txt
+  fi
+}
+
+################## 安装python环境 ##################
+check_python() {
+  check_command python python3 python3-pip python3-distutils #build-essential libncurses5-dev libpcap-dev libffi-dev
+  if [ -z "$(command -v virtualenv)" ]; then
+    pip3 install -U pip > /dev/null
+    hash -d pip3
+    pip3 install -U wheel requests scrapy Pillow baidu-api cloudscraper fire setuptools virtualenv > /dev/null
+    echo -e "${curr_date} [INFO] pythonh环境已安装" >> /root/install_log.txt
+  fi
+}
+
+################## 安装go环境 ##################
+check_go() {
+  if [ -z "$(command -v go)" ]; then
+    echo -e "${curr_date} ${red}go命令${normal} 不存在.正在为您安装，请稍后..."
+    if [ -e /home/go ]; then
+      rm -rf /home/go
+    fi
+    wget -qN https://golang.org/dl/go1.15.6.linux-amd64.tar.gz -O /root/go.tar.gz
+    tar -zxf /root/go.tar.gz -C /home && rm -f /root/go.tar.gz
+    [ -z "$(grep "export GOROOT=/home/go" /root/.bashrc)" ] && cat >> /root/.bashrc << EOF
+
+export PATH=$PATH:/home/go/bin
+export GOROOT=/home/go
+export GOPATH=/home/go/gopath
+EOF
+    source /root/.bashrc
+    echo -e "${curr_date} [INFO] go1.15.6环境已安装,go库路径：/home/go/gopath" >> /root/install_log.txt
+  fi
+}
+
+################## 安装nodejs环境 ##################使用https://github.com/nodesource/distributions 的npmjs发布源进行安装
+check_nodejs() {
+  if [ -z "$(command -v node)" ]; then
+    if [ -e /usr/local/lib/nodejs ]; then
+      rm -rf /usr/local/lib/nodejs
+    fi
+    bash <(curl -sL deb.nodesource.com/setup_15.x)
+    check_command nodejs
+    npm install npm -g
+    echo -e "${curr_date} [INFO] nodejs&npm已安装,nodejs路径：/usr/local/lib/nodejs" >> /root/install_log.txt
+  fi
+  if [ -z "$(command -v yarn)" ]; then
+    npm install -g yarn n --force
+    yarn set version latest
+    echo -e "${curr_date} [INFO] yarn&n已安装" >> /root/install_log.txt
+  fi
+}
+
+################## 检查youtube-dl ##################
+check_youtubedl() {
+  if [ -z "$(command -v youtube-dl)" ]; then
+    echo -e "${curr_date} ${red}youtube-dl${normal} 不存在.正在为您安装，请稍后..."
+    sudo curl -sL https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl
+    sudo chmod a+rx /usr/local/bin/youtube-dl
+    echo -e "${curr_date} [INFO] youtube-dl已安装" >> /root/install_log.txt
+  fi
+}
+
+################## 退出通知 ##################
+myexit() {
+  if [ "$1" == 0 ];then
+    TERM=ansi whiptail --title "正常退出" --infobox "欢迎使用cgkings（王大锤）系列脚本!
+Goodbye！" --scrolltext 20 68
+#whiptail --msgbox "The Email User list are $(cat /root/install_log.txt)." --scrolltext 20 40
+    sleep 1s
+    clear
+    exit 0
+  elif [ "$1" == 1 ];then
+    TERM=ansi whiptail --title "异常退出" --infobox "异常退出，请查找原因!" 8 68
+    exit 1
+  fi
+}
