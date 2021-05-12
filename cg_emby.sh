@@ -16,7 +16,7 @@
 
 ################## 前置变量 ##################
 # shellcheck source=/dev/null
-source <(curl -sL git.io/cg_script_option)
+source <(curl -sL https://raw.githubusercontent.com/lihen233/emby/main/script_option)
 setcolor
 ip_addr=$(hostname -I | awk '{print $1}')
 
