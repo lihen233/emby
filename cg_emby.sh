@@ -58,7 +58,7 @@ check_emby() {
       sed -i '/[Service]/a\Restart=always\nRestartSec=2\nStartLimitInterval=0' /usr/lib/systemd/system/emby-server.service
       #破解emby
       rm -f /opt/emby-server/system/System.Net.Http.dll
-      wget https://github.com/cgkings/script-store/raw/master/config/System.Net.Http.dll -O /opt/emby-server/system/System.Net.Http.dll #(注意替换掉命令中的 emby 所在目录)下载破解程序集替换原有程序
+      wget https://github.com/cgkings/script-store/raw/master/config/emby/System.Net.Http.dll -O /opt/emby-server/system/System.Net.Http.dll #(注意替换掉命令中的 emby 所在目录)下载破解程序集替换原有程序
       sleep 3s
       systemctl daemon-reload && systemctl start emby-server
       whiptail --title "EMBY安装成功提示！！！" --msgbox "恭喜您EMBY安装成功，请您访问：http://${ip_addr}:8096 进一步配置Emby, 感谢使用~~~" 10 60
