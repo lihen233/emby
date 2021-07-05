@@ -82,11 +82,11 @@ crack_emby() {
 bak_emby() {
   check_emby
   remote_choose
-  systemctl stop emby-server #结束 emby 进程
-  #rm -rf /var/lib/emby/cache/* #清空cache
-  cd /var/lib && tar -cvf emby_bak_"$(date "+%Y-%m-%d")".tar emby #打包/var/lib/emby
-  rclone move emby_bak_"$(date "+%Y-%m-%d")".tar "$my_remote":  -vP #上传文件
-  systemctl start emby-server
+  systemctl stop jellyfin-service #结束 emby 进程
+  #rm -rf /var/lib/jellyfin/.cache/* #清空cache
+  cd /var/lib && tar -cvf jellyfin_bak_"$(date "+%Y-%m-%d")".tar jellyfin #打包/var/lib/jellyfin
+  rclone move jellyfin_bak_"$(date "+%Y-%m-%d")".tar "$my_remote":  -vP #上传文件
+  systemctl start jellyfin-service
   echo -e "${curr_date} [INFO] emby备份完毕."
 }
 
