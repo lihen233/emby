@@ -80,7 +80,6 @@ crack_emby() {
 
 ################## 备份emby ##################
 bak_emby() {
-  check_emby
   remote_choose
   systemctl stop jellyfin-service #结束 emby 进程
   #rm -rf /var/lib/jellyfin/.cache/* #清空cache
