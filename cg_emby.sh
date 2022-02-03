@@ -68,13 +68,13 @@ check_emby() {
 
 ################## 备份emby ##################
 bak_emby() {
-  check_emby
   remote_choose
   systemctl stop emby-server #结束 emby 进程
-  rm -rf /var/lib/emby/cache/* #清空cache
+  #rm -rf /var/lib/emby/cache/* #清空cache
   cd /var/lib && tar -cvf emby_bak_"$(date "+%Y-%m-%d")".tar emby #打包/var/lib/emby
   rclone move emby_bak_"$(date "+%Y-%m-%d")".tar "$my_remote": -vP #上传gd
   systemctl start emby-server
+  echo -e "${curr_date} [INFO] emby $(date "+%Y-%m-%d") 备份完毕." | tee -a /root/install_log.txt
 }
 
 ################## 还原emby ##################
